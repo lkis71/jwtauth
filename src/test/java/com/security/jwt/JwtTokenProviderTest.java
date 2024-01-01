@@ -6,6 +6,7 @@ import com.security.member.dto.MemberLoginDto;
 import com.security.member.enums.Role;
 import com.security.member.service.MemberService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,6 +45,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
+    @DisplayName("JWT 토큰을 발행한다.")
     void generateToken() {
 
         //given
@@ -60,6 +62,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
+    @DisplayName("인증정보를 조회한다.")
     void getAuthentication() {
 
         //given
@@ -77,6 +80,7 @@ class JwtTokenProviderTest {
     }
 
     @Test
+    @DisplayName("토큰 유효성을 검증한다.")
     void validateToken() {
 
         //given

@@ -31,6 +31,12 @@ public class JwtTokenProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
 
+    /**
+     * 토큰 생성
+     *
+     * @param authentication
+     * @return
+     */
     public TokenDto generateToken(Authentication authentication) {
 
         // 권한 가져오기
@@ -59,6 +65,12 @@ public class JwtTokenProvider {
                 .build();
     }
 
+    /**
+     * 인증완료된 정보 조회
+     *
+     * @param accessToken
+     * @return
+     */
     public Authentication getAuthentication(String accessToken) {
 
         Claims claims = parseClaims(accessToken);
@@ -69,13 +81,19 @@ public class JwtTokenProvider {
 
         Collection<? extends GrantedAuthority> authorities =
                 Arrays.stream(claims.get("auth").toString().split(","))
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
+                    .map(SimpleGrantedAuthority::new)
+                    .collect(Collectors.toList());
 
         UserDetails principal = new User(claims.getSubject(), "", authorities);
         return new UsernamePasswordAuthenticationToken(principal, "", authorities);
     }
 
+    /**
+     * 토큰 유효성 검사
+     *
+     * @param token
+     * @return
+     */
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
