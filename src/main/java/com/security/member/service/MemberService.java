@@ -34,12 +34,11 @@ public class MemberService {
 
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(memberLoginDto.getId(), memberLoginDto.getPassword());
 
-        // 실제 검증
+        // 사용자 자격검증
+        // 이 과정에서 CustomUserDetailsService 에서 재정의한 loadUserByUsername 메서드 호출
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
         // jwt 토큰 생성
-        TokenDto tokenDto = jwtTokenProvider.generateToken(authentication);
-
-        return tokenDto;
+        return jwtTokenProvider.createToken(authentication);
     }
 }

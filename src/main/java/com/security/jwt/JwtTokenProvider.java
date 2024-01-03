@@ -24,11 +24,12 @@ import java.util.stream.Collectors;
 @Component
 public class JwtTokenProvider {
 
-    private final Key key;
+    private final Key secretKey;
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
+        // application.yml에서 받아온 키를 암호화 한다.
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+        this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
     /**
@@ -37,29 +38,35 @@ public class JwtTokenProvider {
      * @param authentication
      * @return
      */
-    public TokenDto generateToken(Authentication authentication) {
+    public TokenDto createToken(Authentication authentication) {
 
         // 권한 가져오기
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
-        long now = (new Date()).getTime();
-        Date accessTokenExpiresIn = new Date(now + 86400000);
+        Claims claims = Jwts.claims().setSubject(authentication.getName());
+        claims.put("auth", authorities);
+
+        Date tokenExpiresIn = new Date(System.currentTimeMillis());
+        Date tokenExpiresIn2 = new Date(System.currentTimeMillis() + 86400000);
+
         String accessToken = Jwts.builder()
-                .setSubject(authentication.getName())
-                .claim("auth", authorities)
-                .setExpiration(accessTokenExpiresIn)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .setClaims(claims)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(tokenExpiresIn)
+                .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
 
+        // refreshToken에는 사용자 정보를 넣지 않는 것이 좋음(만료 기간이 길기 때문에 취약)
         String refreshToken = Jwts.builder()
-                .setExpiration(accessTokenExpiresIn)
-                .signWith(key, SignatureAlgorithm.HS256)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(tokenExpiresIn2)
+                .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
 
         return TokenDto.builder()
-                .grantType("bearer")
+                .tokenType("Bearer")
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
                 .build();
@@ -96,7 +103,7 @@ public class JwtTokenProvider {
      */
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
             return true;
         } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
             log.info("Invalid JWT Token", e);
@@ -110,9 +117,23 @@ public class JwtTokenProvider {
         return false;
     }
 
+    /**
+     * 토큰 만료일자 체크
+     *
+     * @param token
+     * @return
+     */
+    public boolean isExpired(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(secretKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody().getExpiration().before(new Date());
+    }
+
     private Claims parseClaims(String accessToken) {
         try {
-            return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
+            return Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(accessToken).getBody();
         } catch (ExpiredJwtException e) {
             return e.getClaims();
         }

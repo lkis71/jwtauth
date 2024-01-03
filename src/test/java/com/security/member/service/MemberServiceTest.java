@@ -1,6 +1,7 @@
 package com.security.member.service;
 
 import com.security.jwt.dto.TokenDto;
+import com.security.jwt.service.CustomUserDetailsService;
 import com.security.member.dto.MemberJoinDto;
 import com.security.member.dto.MemberLoginDto;
 import com.security.member.entity.Member;
@@ -10,6 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,6 +23,9 @@ public class MemberServiceTest {
 
     @Autowired
     MemberService memberService;
+
+    @Autowired
+    CustomUserDetailsService customUserDetailsService;
 
     @Test
     @DisplayName("회원가입")
@@ -64,5 +69,14 @@ public class MemberServiceTest {
         //then
         assertNotNull(tokenDto.getAccessToken());
         assertNotNull(tokenDto.getRefreshToken());
+    }
+
+    @Test
+    public void jwt토큰_만료일자_테스트() throws Exception {
+        //given
+
+        //when
+
+        //then
     }
 }

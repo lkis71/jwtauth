@@ -12,7 +12,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class TokenDto {
 
-    private String grantType;
+    private String tokenType;
     private String accessToken;
     private String refreshToken;
 }

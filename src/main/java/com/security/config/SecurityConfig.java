@@ -1,10 +1,11 @@
 package com.security.config;
 
-import com.security.jwt.JwtAuthenticationFilter;
+import com.security.jwt.JwtTokenFilter;
 import com.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -13,6 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * @EnableWebSecurity : 모든 api에 인증이 필요
+ */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -24,6 +28,7 @@ public class SecurityConfig {
      * httpBasic().disable().csrf().disable() : httpBasic, csrf 속성을 사용하지 않음 (rest api 방식이므로)
      * sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) : 세션을 사용하지 않음 (jwt는 세션을 활용하지 않음)
      * antMatchers().permitAll() : 입력한 api의 모든 요청을 허가
+     * antMatchers().authenticated() : 모든 POST 요청은 인증 필요
      * antMatchers().hasRole("USER") : 사용자는 입력한 권한(hasRole)을 가져야 입력한 api로 요청이 가능
      * anyRequest().authenticated() : 이 밖에 모든 요청에 대해 인증을 필요로 함
      * addFilterBefore(customFilter, beforeFilter) : BeforeFilter 전에 customFilter를 실행 (JWT 사용하기 위해)
@@ -40,11 +45,11 @@ public class SecurityConfig {
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and()
                     .authorizeRequests()
-                    .antMatchers("/").permitAll()
-                    .antMatchers("/").hasRole("USER")
+                    .antMatchers("/api/v1/member/join", "/api/v1/member/login").permitAll()
+                    .antMatchers(HttpMethod.POST, "/api/v1/**").authenticated()
                     .anyRequest().authenticated()
                     .and()
-                    .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
+                    .addFilterBefore(new JwtTokenFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
                     .build();
     }
 

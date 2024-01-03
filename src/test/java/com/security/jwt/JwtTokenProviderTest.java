@@ -46,7 +46,7 @@ class JwtTokenProviderTest {
 
     @Test
     @DisplayName("JWT 토큰을 발행한다.")
-    void generateToken() {
+    void createToken() {
 
         //given
         memberService.join(this.memberJoinDto);
@@ -54,7 +54,7 @@ class JwtTokenProviderTest {
         //when
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(this.memberLoginDto.getId(), this.memberLoginDto.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        TokenDto tokenDto = jwtTokenProvider.generateToken(authentication);
+        TokenDto tokenDto = jwtTokenProvider.createToken(authentication);
 
         //then
         assertNotNull(tokenDto.getAccessToken());
@@ -71,7 +71,7 @@ class JwtTokenProviderTest {
         //when
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(this.memberLoginDto.getId(), this.memberLoginDto.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        TokenDto tokenDto = jwtTokenProvider.generateToken(authentication);
+        TokenDto tokenDto = jwtTokenProvider.createToken(authentication);
 
         Authentication authentication2 = jwtTokenProvider.getAuthentication(tokenDto.getAccessToken());
 
@@ -89,7 +89,7 @@ class JwtTokenProviderTest {
         //when
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(this.memberLoginDto.getId(), this.memberLoginDto.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        TokenDto tokenDto = jwtTokenProvider.generateToken(authentication);
+        TokenDto tokenDto = jwtTokenProvider.createToken(authentication);
 
         boolean isToken = jwtTokenProvider.validateToken(tokenDto.getAccessToken());
 
