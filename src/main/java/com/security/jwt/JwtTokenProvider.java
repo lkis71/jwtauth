@@ -27,7 +27,6 @@ public class JwtTokenProvider {
     private final Key secretKey;
 
     public JwtTokenProvider(@Value("${jwt.secret}") String secretKey) {
-        // application.yml에서 받아온 키를 암호화 한다.
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
@@ -45,23 +44,21 @@ public class JwtTokenProvider {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
 
+        // 사용자 아이디, 권한 저장
         Claims claims = Jwts.claims().setSubject(authentication.getName());
-        claims.put("auth", authorities);
-
-        Date tokenExpiresIn = new Date(System.currentTimeMillis());
-        Date tokenExpiresIn2 = new Date(System.currentTimeMillis() + 86400000);
+        claims.put("roles", authorities);
 
         String accessToken = Jwts.builder()
                 .setClaims(claims)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(tokenExpiresIn)
+                .setExpiration(new Date(System.currentTimeMillis() + 3600000)) //1시간
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
 
         // refreshToken에는 사용자 정보를 넣지 않는 것이 좋음(만료 기간이 길기 때문에 취약)
         String refreshToken = Jwts.builder()
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(tokenExpiresIn2)
+                .setExpiration(new Date(System.currentTimeMillis() + (3600000 * 24 * 30))) //30일
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
 
@@ -82,17 +79,22 @@ public class JwtTokenProvider {
 
         Claims claims = parseClaims(accessToken);
 
-        if (claims.get("auth") == null) {
+        if (claims.get("roles") == null) {
             throw new RuntimeException("권한 정보가 없는 토큰입니다.");
         }
 
         Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get("auth").toString().split(","))
+                Arrays.stream(claims.get("roles").toString().split(","))
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toList());
 
-        UserDetails principal = new User(claims.getSubject(), "", authorities);
-        return new UsernamePasswordAuthenticationToken(principal, "", authorities);
+        UserDetails principal = User.builder()
+                .username(claims.getSubject())
+                .password("")
+                .authorities(authorities)
+                .build();
+
+        return new UsernamePasswordAuthenticationToken(principal, accessToken, authorities);
     }
 
     /**

@@ -32,13 +32,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 토큰 만료날짜 체크
-        if (jwtTokenProvider.isExpired(token)) {
-            log.error("토큰이 만료되었습니다.");
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         // 토큰에서 Authentication 객체를 가지고 와서 SecurityContext 에 저장
         Authentication authentication = jwtTokenProvider.getAuthentication(token);
         SecurityContextHolder.getContext().setAuthentication(authentication);

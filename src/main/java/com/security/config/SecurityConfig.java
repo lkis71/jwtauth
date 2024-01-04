@@ -3,6 +3,7 @@ package com.security.config;
 import com.security.jwt.JwtTokenFilter;
 import com.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -25,7 +26,8 @@ public class SecurityConfig {
     private final JwtTokenProvider jwtTokenProvider;
 
     /**
-     * httpBasic().disable().csrf().disable() : httpBasic, csrf 속성을 사용하지 않음 (rest api 방식이므로)
+     * httpBasic().disable() : 기본 http의 ID/PW의 로그인 방식을 사용하지 않는다는 설정
+     * csrf().disable() : csrf 속성을 사용하지 않음 (rest api 방식이므로)
      * sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) : 세션을 사용하지 않음 (jwt는 세션을 활용하지 않음)
      * antMatchers().permitAll() : 입력한 api의 모든 요청을 허가
      * antMatchers().authenticated() : 모든 POST 요청은 인증 필요
@@ -46,6 +48,7 @@ public class SecurityConfig {
                     .and()
                     .authorizeRequests()
                     .antMatchers("/api/v1/member/join", "/api/v1/member/login").permitAll()
+                    .requestMatchers(PathRequest.toH2Console()).permitAll()
                     .antMatchers(HttpMethod.POST, "/api/v1/**").authenticated()
                     .anyRequest().authenticated()
                     .and()

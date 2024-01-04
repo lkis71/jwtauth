@@ -15,13 +15,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 public class MemberService {
 
     private final MemberRepository memberRepository;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final JwtTokenProvider jwtTokenProvider;
 
+    @Transactional
     public Member join(MemberJoinDto memberJoinDto) {
 
         Member member = memberJoinDto.toEntity();
@@ -30,15 +31,22 @@ public class MemberService {
         return member;
     }
 
+    @Transactional
     public TokenDto login(MemberLoginDto memberLoginDto) {
 
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(memberLoginDto.getId(), memberLoginDto.getPassword());
 
-        // 사용자 자격검증
+        // 사용자 인증
         // 이 과정에서 CustomUserDetailsService 에서 재정의한 loadUserByUsername 메서드 호출
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
+        TokenDto tokenDto = jwtTokenProvider.createToken(authentication);
+
+        // refreshToken 저장
+        Member member = memberRepository.findById(memberLoginDto.getId()).orElseThrow(IllegalArgumentException::new);
+        member.setRefreshToken(tokenDto.getRefreshToken());
+
         // jwt 토큰 생성
-        return jwtTokenProvider.createToken(authentication);
+        return tokenDto;
     }
 }

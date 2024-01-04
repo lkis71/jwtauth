@@ -3,6 +3,7 @@ package com.security.member.entity;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,11 +28,15 @@ public class Member implements UserDetails {
 
     private String role;
 
+    @Setter
+    private String refreshToken;
+
     @Builder
-    public Member(String id, String password, String role) {
+    public Member(String id, String password, String role, String refreshToken) {
         this.id = id;
         this.password = password;
         this.role = role;
+        this.refreshToken = refreshToken;
     }
 
     @Override
