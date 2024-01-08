@@ -21,22 +21,20 @@ import java.util.Collection;
 public class Member implements UserDetails {
 
     @Id
-    @Column(name = "member_id")
+    @Column(name = "member_id", nullable = false)
     private String id;
 
+    @Setter
+    @Column(nullable = false)
     private String password;
 
     private String role;
 
-    @Setter
-    private String refreshToken;
-
     @Builder
-    public Member(String id, String password, String role, String refreshToken) {
+    public Member(String id, String password, String role) {
         this.id = id;
         this.password = password;
         this.role = role;
-        this.refreshToken = refreshToken;
     }
 
     @Override

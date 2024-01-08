@@ -1,10 +1,12 @@
 package com.security.member.dto;
 
 import com.security.member.entity.Member;
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-@Data
-@NoArgsConstructor
+@Getter
+@RequiredArgsConstructor
 public class MemberJoinDto {
 
     private String id;

@@ -26,14 +26,14 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         String token = getToken(request);
 
         // 토큰 유효성 검사
-        if (token == null || !jwtTokenProvider.validateToken(token)) {
-            log.error("토큰이 올바르지 않습니다.");
+        if (!jwtTokenProvider.validateToken(token)) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 토큰에서 Authentication 객체를 가지고 와서 SecurityContext 에 저장
+        // JWT 토큰을 검증하고 토큰에 저장된 정보를 UsernamePasswordAuthenticationToken에 담아 SecurityContextHolder에 저장한다.
         Authentication authentication = jwtTokenProvider.getAuthentication(token);
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);
     }
