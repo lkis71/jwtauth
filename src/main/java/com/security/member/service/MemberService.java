@@ -61,6 +61,11 @@ public class MemberService {
         return tokenDto;
     }
 
+    public void logout() {
+        //todo
+        //갱신토큰 파괴
+    }
+
     /**
      * 토큰 갱신 절차
      * 1. DB에 저장된 사용자의 토큰 정보 조회
@@ -76,18 +81,17 @@ public class MemberService {
 
         TokenStorage tokenStorage = findMemberToken(tokenStorageRequest.getRefreshToken());
 
-        if (tokenStorage.isValidToken(tokenStorageRequest)) {
-            Member member = findMember(tokenStorage.getMember().getId());
-
-            Authentication authentication = jwtService.authentication(member.getId(), member.getPassword());
-
-            TokenDto refreshTokenDto = jwtTokenProvider.createToken(authentication);
-            tokenStorage.setRefreshToken(refreshTokenDto.getRefreshToken());
-
-            return refreshTokenDto;
-        } else {
+        if (!tokenStorage.isValidToken(tokenStorageRequest)) {
             throw new IllegalArgumentException("토큰이 유효하지 않습니다.");
         }
+
+        Member member = findMember(tokenStorage.getMember().getId());
+        Authentication authentication = jwtService.authentication(member.getId(), member.getPassword());
+
+        TokenDto refreshTokenDto = jwtTokenProvider.createToken(authentication);
+        tokenStorage.setRefreshToken(refreshTokenDto.getRefreshToken());
+
+        return refreshTokenDto;
     }
 
     private TokenStorage findMemberToken(String refreshToken) {

@@ -1,9 +1,12 @@
 package com.security.member.entity;
 
 import com.security.jwt.dto.TokenStorageRequest;
+import com.security.member.entity.Member;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -19,24 +22,17 @@ public class TokenStorage {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "memer_id")
+    @Column(nullable = false)
     private Member member;
 
-    private String ipAddress;
-
     @Builder
-    public TokenStorage(Long id, String refreshToken, Member member, String ipAddress) {
-        this.id = id;
+    public TokenStorage(String refreshToken, Member member) {
         this.refreshToken = refreshToken;
         this.member = member;
-        this.ipAddress = ipAddress;
     }
 
     public Boolean isValidToken(TokenStorageRequest tokenStorageRequest) {
-        return this.refreshToken.equals(tokenStorageRequest.getRefreshToken());
-//            && this.ipAddress.equals(tokenStorageRequest.getIpAddress());
-    }
-
-    public void updateRefreshToken(String refreshToken) {
-        this.setRefreshToken(refreshToken);
+        return this.refreshToken.equals(tokenStorageRequest.getRefreshToken())
+                && this.member.getId().equals(tokenStorageRequest.getMemberId());
     }
 }
