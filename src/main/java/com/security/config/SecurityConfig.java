@@ -47,7 +47,7 @@ public class SecurityConfig {
                     .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                     .and()
                     .authorizeRequests()
-                    .antMatchers("/api/v1/member/join", "/api/v1/member/login").permitAll()
+                    .antMatchers("/api/v1/member/join", "/api/v1/member/login", "/api/v1/member/token/refresh").permitAll()
                     .requestMatchers(PathRequest.toH2Console()).permitAll()
                     .antMatchers(HttpMethod.POST, "/api/v1/**").authenticated()
                     .anyRequest().authenticated()

@@ -58,7 +58,7 @@ public class JwtTokenProvider {
         // refreshToken에는 사용자 정보를 넣지 않는 것이 좋음(만료 기간이 길기 때문에 취약)
         String refreshToken = Jwts.builder()
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + (3600000 * 24 * 30))) //30일
+                .setExpiration(new Date(System.currentTimeMillis() + (3600000L * 24 * 30))) //30일
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
 

@@ -6,12 +6,10 @@ import com.security.member.dto.MemberJoinDto;
 import com.security.member.dto.MemberLoginDto;
 import com.security.member.entity.Member;
 import com.security.member.enums.Role;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -57,26 +55,19 @@ public class MemberServiceTest {
                 .password("9156")
                 .role(Role.ADMIN.getValue())
                 .build();
-
-        MemberLoginDto memberLoginDto = new MemberLoginDto();
-        memberLoginDto.setId("kslee");
-        memberLoginDto.setPassword("9156");
+        Member member = memberService.join(memberJoinDto);
 
         //when
-        memberService.join(memberJoinDto);
+        MemberLoginDto memberLoginDto = MemberLoginDto.builder()
+                .id("kslee")
+                .password("9156")
+                .build();
         TokenDto tokenDto = memberService.login(memberLoginDto);
+
+        System.out.println(tokenDto.getRefreshToken());
 
         //then
         assertNotNull(tokenDto.getAccessToken());
         assertNotNull(tokenDto.getRefreshToken());
-    }
-
-    @Test
-    public void jwt토큰_만료일자_테스트() throws Exception {
-        //given
-
-        //when
-
-        //then
     }
 }

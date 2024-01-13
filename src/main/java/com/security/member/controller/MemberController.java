@@ -1,16 +1,14 @@
 package com.security.member.controller;
 
 import com.security.jwt.dto.TokenDto;
+import com.security.jwt.dto.TokenStorageRequest;
 import com.security.member.dto.MemberJoinDto;
 import com.security.member.dto.MemberLoginDto;
 import com.security.member.entity.Member;
 import com.security.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,13 +24,14 @@ public class MemberController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenDto> login(@RequestBody MemberLoginDto memberLoginDto) {
-        TokenDto login = memberService.login(memberLoginDto);
-        return ResponseEntity.ok().body(login);
+    public ResponseEntity<TokenDto> login(@RequestBody MemberLoginDto memberLoginDto, @RequestHeader("User-Agent") String userAgent) {
+        TokenDto tokenDto = memberService.login(memberLoginDto);
+        return ResponseEntity.ok().body(tokenDto);
     }
 
-    @PostMapping("/test")
-    public ResponseEntity<String> test() {
-        return ResponseEntity.ok().body("성공");
+    @GetMapping("/token/refresh")
+    public ResponseEntity<TokenDto> refreshToken(@RequestBody TokenStorageRequest tokenStorageRequest) {
+        TokenDto tokenDto = memberService.refreshToken(tokenStorageRequest);
+        return ResponseEntity.ok().body(tokenDto);
     }
 }
