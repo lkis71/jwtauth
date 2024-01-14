@@ -1,12 +1,9 @@
-package com.security.member.entity;
+package com.security.entity;
 
-import com.security.jwt.dto.TokenStorageRequest;
-import com.security.member.entity.Member;
+import com.security.dto.TokenStorageRequest;
 import lombok.*;
 
 import javax.persistence.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -21,8 +18,7 @@ public class TokenStorage {
     private String refreshToken;
 
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "memer_id")
-    @Column(nullable = false)
+    @JoinColumn(name = "memer_id", nullable = false)
     private Member member;
 
     @Builder

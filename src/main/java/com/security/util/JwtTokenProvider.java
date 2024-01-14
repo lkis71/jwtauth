@@ -1,6 +1,6 @@
-package com.security.jwt;
+package com.security.util;
 
-import com.security.jwt.dto.TokenDto;
+import com.security.dto.TokenResponse;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -37,7 +37,7 @@ public class JwtTokenProvider {
      * @param authentication
      * @return
      */
-    public TokenDto createToken(Authentication authentication) {
+    public TokenResponse createToken(Authentication authentication) {
 
         // 권한 가져오기
         String authorities = authentication.getAuthorities().stream()
@@ -62,7 +62,7 @@ public class JwtTokenProvider {
                 .signWith(secretKey, SignatureAlgorithm.HS256)
                 .compact();
 
-        return TokenDto.builder()
+        return TokenResponse.builder()
                 .tokenType("Bearer")
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)

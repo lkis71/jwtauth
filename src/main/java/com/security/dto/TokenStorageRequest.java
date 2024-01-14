@@ -1,4 +1,4 @@
-package com.security.jwt.dto;
+package com.security.dto;
 
 import com.sun.istack.NotNull;
 import lombok.Builder;

@@ -1,6 +1,6 @@
-package com.security.jwt.repository;
+package com.security.repository;
 
-import com.security.member.entity.TokenStorage;
+import com.security.entity.TokenStorage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 

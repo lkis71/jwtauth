@@ -1,8 +1,9 @@
 package com.security.jwt.service;
 
-import com.security.member.dto.MemberJoinDto;
-import com.security.member.enums.Role;
-import com.security.member.service.MemberService;
+import com.security.dto.MemberJoinRequest;
+import com.security.enums.Role;
+import com.security.service.CustomUserDetailsService;
+import com.security.service.MemberService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,11 +29,11 @@ class CustomUserDetailsServiceTest {
     @Autowired
     PasswordEncoder passwordEncoder;
 
-    MemberJoinDto memberJoinDto = new MemberJoinDto();
+    MemberJoinRequest memberJoinRequest = null;
 
     @BeforeEach
     void init() {
-        memberJoinDto = MemberJoinDto.builder()
+        memberJoinRequest = MemberJoinRequest.builder()
                 .id("kslee")
                 .password("9156")
                 .role(Role.ADMIN.getValue())
@@ -44,14 +45,14 @@ class CustomUserDetailsServiceTest {
     void loadUserByUsername() {
 
         //given
-        memberService.join(memberJoinDto);
+        memberService.join(memberJoinRequest);
 
         //when
-        UserDetails userDetails = customUserDetailsService.loadUserByUsername(memberJoinDto.getId());
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(memberJoinRequest.getId());
 
         //then
-        assertEquals(memberJoinDto.getId(), userDetails.getUsername());
-        assertTrue(passwordEncoder.matches(memberJoinDto.getPassword(), userDetails.getPassword()));
-        assertTrue(userDetails.getAuthorities().toString().contains(memberJoinDto.getRole()));
+        assertEquals(memberJoinRequest.getId(), userDetails.getUsername());
+        assertTrue(passwordEncoder.matches(memberJoinRequest.getPassword(), userDetails.getPassword()));
+        assertTrue(userDetails.getAuthorities().toString().contains(memberJoinRequest.getRole()));
     }
 }

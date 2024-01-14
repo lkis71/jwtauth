@@ -1,7 +1,7 @@
 package com.security.config;
 
-import com.security.jwt.JwtTokenFilter;
-import com.security.jwt.JwtTokenProvider;
+import com.security.filter.JwtTokenFilter;
+import com.security.util.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;

@@ -1,15 +1,14 @@
-package com.security.member.service;
+package com.security.service;
 
-import com.security.jwt.JwtTokenProvider;
-import com.security.jwt.dto.TokenDto;
-import com.security.jwt.dto.TokenStorageRequest;
-import com.security.jwt.repository.JwtRepository;
-import com.security.jwt.service.JwtService;
-import com.security.member.dto.MemberJoinDto;
-import com.security.member.dto.MemberLoginDto;
-import com.security.member.entity.Member;
-import com.security.member.entity.TokenStorage;
-import com.security.member.repository.MemberRepository;
+import com.security.dto.MemberJoinRequest;
+import com.security.dto.MemberLoginRequest;
+import com.security.dto.TokenResponse;
+import com.security.dto.TokenStorageRequest;
+import com.security.entity.Member;
+import com.security.entity.TokenStorage;
+import com.security.util.JwtTokenProvider;
+import com.security.repository.JwtRepository;
+import com.security.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,36 +28,36 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
-    public Member join(MemberJoinDto memberJoinDto) {
+    public Member join(MemberJoinRequest memberJoinRequest) {
 
-        Member member = memberJoinDto.toEntity();
-        member.setPassword(passwordEncoder.encode(memberJoinDto.getPassword()));
+        Member member = memberJoinRequest.toEntity();
+        member.setPassword(passwordEncoder.encode(memberJoinRequest.getPassword()));
         memberRepository.save(member);
 
         return member;
     }
 
     @Transactional
-    public TokenDto login(MemberLoginDto memberLoginDto) {
+    public TokenResponse login(MemberLoginRequest memberLoginRequest) {
 
-        Member member = findMember(memberLoginDto.getId());
+        Member member = findMember(memberLoginRequest.getId());
         // 평문 비밀번호와 암호화된 비밀번호 일치성 검사
-        if (!passwordEncoder.matches(memberLoginDto.getPassword(), member.getPassword())) {
+        if (!passwordEncoder.matches(memberLoginRequest.getPassword(), member.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
         Authentication authentication = jwtService.authentication(member.getId(), member.getPassword());
 
         // jwt 토큰 생성
-        TokenDto tokenDto = jwtTokenProvider.createToken(authentication);
+        TokenResponse tokenResponse = jwtTokenProvider.createToken(authentication);
 
         // refreshToken 저장
         jwtRepository.save(TokenStorage.builder()
-                .refreshToken(tokenDto.getRefreshToken())
-                .member(findMember(memberLoginDto.getId()))
+                .refreshToken(tokenResponse.getRefreshToken())
+                .member(findMember(memberLoginRequest.getId()))
                 .build());
 
-        return tokenDto;
+        return tokenResponse;
     }
 
     public void logout() {
@@ -77,7 +76,7 @@ public class MemberService {
      * @return
      */
     @Transactional
-    public TokenDto refreshToken(TokenStorageRequest tokenStorageRequest) {
+    public TokenResponse refreshToken(TokenStorageRequest tokenStorageRequest) {
 
         TokenStorage tokenStorage = findMemberToken(tokenStorageRequest.getRefreshToken());
 
@@ -88,10 +87,10 @@ public class MemberService {
         Member member = findMember(tokenStorage.getMember().getId());
         Authentication authentication = jwtService.authentication(member.getId(), member.getPassword());
 
-        TokenDto refreshTokenDto = jwtTokenProvider.createToken(authentication);
-        tokenStorage.setRefreshToken(refreshTokenDto.getRefreshToken());
+        TokenResponse refreshTokenResponse = jwtTokenProvider.createToken(authentication);
+        tokenStorage.setRefreshToken(refreshTokenResponse.getRefreshToken());
 
-        return refreshTokenDto;
+        return refreshTokenResponse;
     }
 
     private TokenStorage findMemberToken(String refreshToken) {

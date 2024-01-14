@@ -1,12 +1,12 @@
 package com.security.jwt.service;
 
-import com.security.jwt.dto.TokenDto;
-import com.security.jwt.dto.TokenStorageRequest;
-import com.security.member.dto.MemberJoinDto;
-import com.security.member.dto.MemberLoginDto;
-import com.security.member.entity.Member;
-import com.security.member.enums.Role;
-import com.security.member.service.MemberService;
+import com.security.dto.TokenResponse;
+import com.security.dto.TokenStorageRequest;
+import com.security.dto.MemberJoinRequest;
+import com.security.dto.MemberLoginRequest;
+import com.security.entity.Member;
+import com.security.enums.Role;
+import com.security.service.MemberService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,28 +25,28 @@ class JwtServiceTest {
     public void 토큰갱신() throws Exception {
 
         //given
-        MemberJoinDto memberJoinDto = MemberJoinDto.builder()
+        MemberJoinRequest memberJoinRequest = MemberJoinRequest.builder()
                 .id("kslee")
                 .password("9156")
                 .role(Role.ADMIN.getValue())
                 .build();
-        Member member = memberService.join(memberJoinDto);
+        Member member = memberService.join(memberJoinRequest);
 
-        MemberLoginDto memberLoginDto = MemberLoginDto.builder()
+        MemberLoginRequest memberLoginRequest = MemberLoginRequest.builder()
                 .id("kslee")
                 .password(member.getPassword())
                 .build();
-        TokenDto tokenDto = memberService.login(memberLoginDto);
+        TokenResponse tokenResponse = memberService.login(memberLoginRequest);
 
         //when
         TokenStorageRequest tokenStorageRequest = TokenStorageRequest.builder()
-                .refreshToken(tokenDto.getRefreshToken())
+                .refreshToken(tokenResponse.getRefreshToken())
                 .build();
 
-        TokenDto refreshTokenDto = memberService.refreshToken(tokenStorageRequest);
+        TokenResponse refreshTokenResponse = memberService.refreshToken(tokenStorageRequest);
 
         //then
-        assertNotEquals(tokenDto.getAccessToken(), refreshTokenDto.getAccessToken());
-        assertNotEquals(tokenDto.getRefreshToken(), refreshTokenDto.getRefreshToken());
+        assertNotEquals(tokenResponse.getAccessToken(), refreshTokenResponse.getAccessToken());
+        assertNotEquals(tokenResponse.getRefreshToken(), refreshTokenResponse.getRefreshToken());
     }
 }

@@ -1,7 +1,7 @@
-package com.security.jwt.service;
+package com.security.service;
 
-import com.security.member.entity.Member;
-import com.security.member.repository.MemberRepository;
+import com.security.entity.Member;
+import com.security.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;

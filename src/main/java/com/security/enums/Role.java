@@ -1,4 +1,4 @@
-package com.security.member.enums;
+package com.security.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

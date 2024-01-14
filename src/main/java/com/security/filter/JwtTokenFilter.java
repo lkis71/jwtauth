@@ -1,8 +1,10 @@
-package com.security.jwt;
+package com.security.filter;
 
+import com.security.util.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
@@ -25,16 +27,25 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         String token = getToken(request);
 
-        // 토큰 유효성 검사
-        if (!jwtTokenProvider.validateToken(token)) {
-            filterChain.doFilter(request, response);
-            return;
+        if (token != null) {
+            if (jwtTokenProvider.isExpired(token)) {
+                response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                response.setContentType("text/plain; charset=UTF-8");
+                response.getWriter().write("토큰이 만료되었습니다. 토큰을 갱신해 주세요.");
+                return;
+            }
+
+            // 토큰 유효성 검사
+            if (!jwtTokenProvider.validateToken(token)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+            // JWT 토큰을 검증하고 토큰에 저장된 정보를 UsernamePasswordAuthenticationToken에 담아 SecurityContextHolder에 저장한다.
+            Authentication authentication = jwtTokenProvider.getAuthentication(token);
+            SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
-        // JWT 토큰을 검증하고 토큰에 저장된 정보를 UsernamePasswordAuthenticationToken에 담아 SecurityContextHolder에 저장한다.
-        Authentication authentication = jwtTokenProvider.getAuthentication(token);
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);
     }
 

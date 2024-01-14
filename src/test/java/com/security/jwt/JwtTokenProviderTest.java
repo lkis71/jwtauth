@@ -1,10 +1,11 @@
 package com.security.jwt;
 
-import com.security.jwt.dto.TokenDto;
-import com.security.member.dto.MemberJoinDto;
-import com.security.member.dto.MemberLoginDto;
-import com.security.member.enums.Role;
-import com.security.member.service.MemberService;
+import com.security.dto.TokenResponse;
+import com.security.dto.MemberJoinRequest;
+import com.security.dto.MemberLoginRequest;
+import com.security.enums.Role;
+import com.security.service.MemberService;
+import com.security.util.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,19 +30,19 @@ class JwtTokenProviderTest {
     @Autowired
     JwtTokenProvider jwtTokenProvider;
 
-    MemberJoinDto memberJoinDto = new MemberJoinDto();
-    MemberLoginDto memberLoginDto = new MemberLoginDto();
+    MemberJoinRequest memberJoinRequest = null;
+    MemberLoginRequest memberLoginRequest = null;
 
     @BeforeEach
     void init() {
-        memberJoinDto = MemberJoinDto.builder()
+        memberJoinRequest = MemberJoinRequest.builder()
                 .id("kslee")
                 .password("9156")
                 .role(Role.ADMIN.getValue())
                 .build();
 
-        memberLoginDto.setId("kslee");
-        memberLoginDto.setPassword("9156");
+        memberLoginRequest.setId("kslee");
+        memberLoginRequest.setPassword("9156");
     }
 
     @Test
@@ -49,16 +50,16 @@ class JwtTokenProviderTest {
     void createToken() {
 
         //given
-        memberService.join(this.memberJoinDto);
+        memberService.join(this.memberJoinRequest);
 
         //when
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(this.memberLoginDto.getId(), this.memberLoginDto.getPassword());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(this.memberLoginRequest.getId(), this.memberLoginRequest.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        TokenDto tokenDto = jwtTokenProvider.createToken(authentication);
+        TokenResponse tokenResponse = jwtTokenProvider.createToken(authentication);
 
         //then
-        assertNotNull(tokenDto.getAccessToken());
-        assertNotNull(tokenDto.getRefreshToken());
+        assertNotNull(tokenResponse.getAccessToken());
+        assertNotNull(tokenResponse.getRefreshToken());
     }
 
     @Test
@@ -66,14 +67,14 @@ class JwtTokenProviderTest {
     void getAuthentication() {
 
         //given
-        memberService.join(this.memberJoinDto);
+        memberService.join(this.memberJoinRequest);
 
         //when
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(this.memberLoginDto.getId(), this.memberLoginDto.getPassword());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(this.memberLoginRequest.getId(), this.memberLoginRequest.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        TokenDto tokenDto = jwtTokenProvider.createToken(authentication);
+        TokenResponse tokenResponse = jwtTokenProvider.createToken(authentication);
 
-        Authentication authentication2 = jwtTokenProvider.getAuthentication(tokenDto.getAccessToken());
+        Authentication authentication2 = jwtTokenProvider.getAuthentication(tokenResponse.getAccessToken());
 
         //then
         assertTrue(authentication2.isAuthenticated());
@@ -84,14 +85,14 @@ class JwtTokenProviderTest {
     void validateToken() {
 
         //given
-        memberService.join(this.memberJoinDto);
+        memberService.join(this.memberJoinRequest);
 
         //when
-        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(this.memberLoginDto.getId(), this.memberLoginDto.getPassword());
+        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(this.memberLoginRequest.getId(), this.memberLoginRequest.getPassword());
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
-        TokenDto tokenDto = jwtTokenProvider.createToken(authentication);
+        TokenResponse tokenResponse = jwtTokenProvider.createToken(authentication);
 
-        boolean isToken = jwtTokenProvider.validateToken(tokenDto.getAccessToken());
+        boolean isToken = jwtTokenProvider.validateToken(tokenResponse.getAccessToken());
 
         //then
         assertTrue(isToken);
