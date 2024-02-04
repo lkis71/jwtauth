@@ -10,10 +10,6 @@ logging:
 jwt:
   secret: ehdgoanfrhkqorentksdlakfmrhekfgehfhrgksmsladlqhdngktkdnflskfkakstp
 
-redis:
-  host: 192.168.71.84
-  port: 6379
-
 ---
 
 spring:
@@ -44,6 +40,10 @@ spring:
 server:
   port: 8090
 
+redis:
+  host: 192.168.71.84
+  port: 6379
+
 ---
 
 spring:
@@ -64,3 +64,7 @@ spring:
 
 server:
   port: 8080
+
+redis:
+  host: 172.17.0.3
+  port: 6379
