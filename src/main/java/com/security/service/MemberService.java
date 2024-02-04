@@ -3,12 +3,12 @@ package com.security.service;
 import com.security.dto.MemberJoinRequest;
 import com.security.dto.MemberLoginRequest;
 import com.security.dto.TokenResponse;
-import com.security.dto.TokenStorageRequest;
 import com.security.entity.Member;
-import com.security.entity.TokenStorage;
-import com.security.util.JwtTokenProvider;
+import com.security.entity.RefreshToken;
 import com.security.repository.JwtRepository;
 import com.security.repository.MemberRepository;
+import com.security.repository.RefreshTokenRedisRepository;
+import com.security.util.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,6 +23,7 @@ public class MemberService {
     private final JwtService jwtService;
     private final MemberRepository memberRepository;
     private final JwtRepository jwtRepository;
+    private final RefreshTokenRedisRepository refreshTokenRedisRepository;
 
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
@@ -52,17 +53,12 @@ public class MemberService {
         TokenResponse tokenResponse = jwtTokenProvider.createToken(authentication);
 
         // refreshToken 저장
-        jwtRepository.save(TokenStorage.builder()
+        refreshTokenRedisRepository.save(RefreshToken.builder()
+                .id(memberLoginRequest.getId())
                 .refreshToken(tokenResponse.getRefreshToken())
-                .member(findMember(memberLoginRequest.getId()))
                 .build());
 
         return tokenResponse;
-    }
-
-    public void logout() {
-        //todo
-        //갱신토큰 파괴
     }
 
     /**
@@ -72,29 +68,29 @@ public class MemberService {
      * 3. 토큰 재발급을 위한 사용자 정보 조회
      * 4. 사용자 인증
      * 5. 토큰 재발급
-     * @param tokenStorageRequest
+     * @param token
      * @return
      */
     @Transactional
-    public TokenResponse refreshToken(TokenStorageRequest tokenStorageRequest) {
+    public TokenResponse refreshToken(String token) {
 
-        TokenStorage tokenStorage = findMemberToken(tokenStorageRequest.getRefreshToken());
+        RefreshToken refreshToken = refreshTokenRedisRepository.findByRefreshToken(token);
 
-        if (!tokenStorage.isValidToken(tokenStorageRequest)) {
-            throw new IllegalArgumentException("토큰이 유효하지 않습니다.");
-        }
+        //TODO: 토큰 유효성 검증
 
-        Member member = findMember(tokenStorage.getMember().getId());
-        Authentication authentication = jwtService.authentication(member.getId(), member.getPassword());
+        Member member = findMember(refreshToken.getId());
+        Authentication authentication = jwtService.authentication(refreshToken.getId(), member.getPassword());
 
-        TokenResponse refreshTokenResponse = jwtTokenProvider.createToken(authentication);
-        tokenStorage.setRefreshToken(refreshTokenResponse.getRefreshToken());
+        // 토큰 갱신
+        TokenResponse tokenResponse = jwtTokenProvider.createToken(authentication);
+        refreshToken.setRefreshToken(tokenResponse.getRefreshToken());
+        refreshTokenRedisRepository.save(refreshToken);
 
-        return refreshTokenResponse;
+        return tokenResponse;
     }
 
-    private TokenStorage findMemberToken(String refreshToken) {
-        TokenStorage tokenStorage = jwtRepository.findMemberToken(refreshToken)
+    private RefreshToken findMemberToken(String refreshToken) {
+        RefreshToken tokenStorage = jwtRepository.findMemberToken(refreshToken)
                 .orElseThrow(() -> new IllegalArgumentException("토큰이 유효하지 않습니다."));
         return tokenStorage;
     }
@@ -104,5 +100,4 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalArgumentException("해당 유저가 존재하지 않습니다."));
         return member;
     }
-
 }

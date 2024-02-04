@@ -6,6 +6,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,7 +14,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
@@ -131,6 +134,21 @@ public class JwtTokenProvider {
                 .build()
                 .parseClaimsJws(token)
                 .getBody().getExpiration().before(new Date());
+    }
+
+    /**
+     * header에서 토큰 꺼내기
+     * @param request
+     * @return
+     */
+    public String getToken(HttpServletRequest request) {
+        final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+
+        if (!StringUtils.hasText(authorization) || !authorization.startsWith("Bearer")) {
+            return null;
+        }
+
+        return authorization.substring(7);
     }
 
     private Claims parseClaims(String accessToken) {

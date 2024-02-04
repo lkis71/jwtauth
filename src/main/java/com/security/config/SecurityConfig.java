@@ -15,9 +15,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/**
- * @EnableWebSecurity : 모든 api에 인증이 필요
- */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor

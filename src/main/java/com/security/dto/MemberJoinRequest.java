@@ -3,9 +3,10 @@ package com.security.dto;
 import com.security.entity.Member;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
-@Builder
+@NoArgsConstructor
 public class MemberJoinRequest {
 
     private String id;
@@ -18,5 +19,12 @@ public class MemberJoinRequest {
                 .password(this.password)
                 .role(this.role)
                 .build();
+    }
+
+    @Builder
+    public MemberJoinRequest(String id, String password, String role) {
+        this.id = id;
+        this.password = password;
+        this.role = role;
     }
 }

@@ -3,8 +3,6 @@ package com.security.filter;
 import com.security.util.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.StringUtils;
@@ -25,20 +23,23 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String token = getToken(request);
+        String token = jwtTokenProvider.getToken(request);
 
-        if (token != null) {
-            if (jwtTokenProvider.isExpired(token)) {
-                response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                response.setContentType("text/plain; charset=UTF-8");
-                response.getWriter().write("토큰이 만료되었습니다. 토큰을 갱신해 주세요.");
-                return;
-            }
+        if (StringUtils.hasText(token)) {
+            String tokenType = request.getHeader("Token-Type");
 
             // 토큰 유효성 검사
             if (!jwtTokenProvider.validateToken(token)) {
                 filterChain.doFilter(request, response);
                 return;
+            }
+
+            // 갱신
+            if (StringUtils.hasText(tokenType) && tokenType.equals("refreshToken")) {
+                if (isRefreshTokenUrl(request)) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
             }
 
             // JWT 토큰을 검증하고 토큰에 저장된 정보를 UsernamePasswordAuthenticationToken에 담아 SecurityContextHolder에 저장한다.
@@ -49,12 +50,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    // Header에서 토큰 꺼내기
-    private String getToken(HttpServletRequest request) {
-        final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-        if (!StringUtils.hasText(authorization) || !authorization.startsWith("Bearer")) {
-            return null;
-        }
-       return authorization.substring(7);
+    private boolean isRefreshTokenUrl(HttpServletRequest request) {
+        return request.getRequestURI().contains("/token/refresh");
     }
 }

@@ -1,6 +1,6 @@
 package com.security.repository;
 
-import com.security.entity.TokenStorage;
+import com.security.entity.RefreshToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -13,17 +13,17 @@ public class JwtRepository {
 
     private final EntityManager em;
 
-    public Optional<TokenStorage> findMemberToken(String refreshToken) {
+    public Optional<RefreshToken> findMemberToken(String refreshToken) {
         return Optional.ofNullable(em.createQuery(
                 "select t " +
                         "from TokenStorage t " +
                         "join fetch t.member m " +
-                        "where t.refreshToken = :refreshToken", TokenStorage.class)
+                        "where t.refreshToken = :refreshToken", RefreshToken.class)
                 .setParameter("refreshToken", refreshToken)
                 .getSingleResult());
     }
 
-    public void save(TokenStorage tokenStorage) {
-        em.persist(tokenStorage);
+    public void save(RefreshToken refreshToken) {
+        em.persist(refreshToken);
     }
 }

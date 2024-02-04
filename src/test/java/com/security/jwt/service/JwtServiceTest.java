@@ -1,7 +1,6 @@
 package com.security.jwt.service;
 
 import com.security.dto.TokenResponse;
-import com.security.dto.TokenStorageRequest;
 import com.security.dto.MemberJoinRequest;
 import com.security.dto.MemberLoginRequest;
 import com.security.entity.Member;
@@ -39,11 +38,7 @@ class JwtServiceTest {
         TokenResponse tokenResponse = memberService.login(memberLoginRequest);
 
         //when
-        TokenStorageRequest tokenStorageRequest = TokenStorageRequest.builder()
-                .refreshToken(tokenResponse.getRefreshToken())
-                .build();
-
-        TokenResponse refreshTokenResponse = memberService.refreshToken(tokenStorageRequest);
+        TokenResponse refreshTokenResponse = memberService.refreshToken(tokenResponse.getRefreshToken());
 
         //then
         assertNotEquals(tokenResponse.getAccessToken(), refreshTokenResponse.getAccessToken());

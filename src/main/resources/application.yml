@@ -1,22 +1,38 @@
-server:
-  port: 8080
+spring:
+  profiles:
+    default: dev
+
+logging:
+  level:
+    org.hibernate.SQL: debug
+    org.hibernate.type: trace
+
+jwt:
+  secret: ehdgoanfrhkqorentksdlakfmrhekfgehfhrgksmsladlqhdngktkdnflskfkakstp
+
+redis:
+  host: 192.168.71.84
+  port: 6379
+
+---
 
 spring:
+  config:
+    activate:
+      on-profile: dev
   datasource:
-    url: jdbc:mysql://192.168.56.1:3306/jwtauth?serverTimezone=Asia/Seoul
+    url: jdbc:h2:~/jwtauth
     username: kslee
     password: 9156
-    driver-class-name: com.mysql.cj.jdbc.Driver
-#    url: jdbc:h2:~/jwtauth
-#    username: kslee
-#    password: 9156
-#    driver-class-name: org.h2.Driver
+    driver-class-name: org.h2.Driver
 
   # h2 database web으로 확인
   h2:
     console:
       enabled: true
       path: /h2-console
+      settings:
+        web-allow-others: true
 
   jpa:
     hibernate:
@@ -25,7 +41,26 @@ spring:
       hibernate:
         format_sql: true
 
-logging:
-  level:
-    org.hibernate.SQL: debug
-    org.hibernate.type: trace
+server:
+  port: 8090
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: test
+  datasource:
+    url: jdbc:mysql://172.17.0.2:3306/jwtauth?serverTimezone=Asia/Seoul
+    username: kslee
+    password: 9156
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
