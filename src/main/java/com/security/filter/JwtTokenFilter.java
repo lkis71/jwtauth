@@ -26,8 +26,6 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         String token = jwtTokenProvider.getToken(request);
 
         if (StringUtils.hasText(token)) {
-            String tokenType = request.getHeader("Token-Type");
-
             // 토큰 유효성 검사
             if (!jwtTokenProvider.validateToken(token)) {
                 filterChain.doFilter(request, response);
@@ -35,6 +33,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
             }
 
             // 갱신
+            String tokenType = request.getHeader("Token-Type");
             if (StringUtils.hasText(tokenType) && tokenType.equals("refreshToken")) {
                 if (isRefreshTokenUrl(request)) {
                     filterChain.doFilter(request, response);

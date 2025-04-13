@@ -81,7 +81,7 @@ public class MemberService {
         Member member = findMember(refreshToken.getId());
         Authentication authentication = jwtService.authentication(refreshToken.getId(), member.getPassword());
 
-        // 토큰 갱신
+        // 토큰 재발급
         TokenResponse tokenResponse = jwtTokenProvider.createToken(authentication);
         refreshToken.setRefreshToken(tokenResponse.getRefreshToken());
         refreshTokenRedisRepository.save(refreshToken);
