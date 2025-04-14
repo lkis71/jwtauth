@@ -28,7 +28,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         if (StringUtils.hasText(token)) {
             // 토큰 유효성 검사
             if (!jwtTokenProvider.validateToken(token)) {
-                filterChain.doFilter(request, response);
+                //filterChain.doFilter(request, response);
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.getWriter().write("Invalid JWT Token");
                 return;
             }
 
