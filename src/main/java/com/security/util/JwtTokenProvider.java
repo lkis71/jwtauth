@@ -5,6 +5,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.catalina.connector.ClientAbortException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -21,6 +22,7 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -50,6 +52,7 @@ public class JwtTokenProvider {
         // 사용자 아이디, 권한 저장
         Claims claims = Jwts.claims().setSubject(authentication.getName());
         claims.put("roles", authorities);
+        claims.setId(UUID.randomUUID().toString());
 
         String accessToken = Jwts.builder()
                 .setClaims(claims)

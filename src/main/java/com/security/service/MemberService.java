@@ -1,5 +1,6 @@
 package com.security.service;
 
+import antlr.Token;
 import com.security.dto.MemberJoinRequest;
 import com.security.dto.MemberLoginRequest;
 import com.security.dto.TokenResponse;
@@ -11,6 +12,9 @@ import com.security.repository.RefreshTokenRedisRepository;
 import com.security.util.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,6 +65,11 @@ public class MemberService {
         return tokenResponse;
     }
 
+    public TokenResponse logout(User user) {
+
+        return null;
+    }
+
     /**
      * 토큰 갱신 절차
      * 1. DB에 저장된 사용자의 토큰 정보 조회
@@ -78,6 +87,7 @@ public class MemberService {
 
         //TODO: 토큰 유효성 검증
 
+        // 사용자 정보 조회 및 인증
         Member member = findMember(refreshToken.getId());
         Authentication authentication = jwtService.authentication(refreshToken.getId(), member.getPassword());
 

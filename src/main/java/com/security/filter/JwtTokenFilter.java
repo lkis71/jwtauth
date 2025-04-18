@@ -25,22 +25,18 @@ public class JwtTokenFilter extends OncePerRequestFilter {
 
         String token = jwtTokenProvider.getToken(request);
 
+        // Refresh Token 의 경우 토큰 검증을 하지 않음
+        if (isRequestRefreshToken(request)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         if (StringUtils.hasText(token)) {
             // 토큰 유효성 검사
             if (!jwtTokenProvider.validateToken(token)) {
-                //filterChain.doFilter(request, response);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.getWriter().write("Invalid JWT Token");
                 return;
-            }
-
-            // 갱신
-            String tokenType = request.getHeader("Token-Type");
-            if (StringUtils.hasText(tokenType) && tokenType.equals("refreshToken")) {
-                if (isRefreshTokenUrl(request)) {
-                    filterChain.doFilter(request, response);
-                    return;
-                }
             }
 
             // JWT 토큰을 검증하고 토큰에 저장된 정보를 UsernamePasswordAuthenticationToken에 담아 SecurityContextHolder에 저장한다.
@@ -51,7 +47,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private boolean isRefreshTokenUrl(HttpServletRequest request) {
+    private boolean isRequestRefreshToken(HttpServletRequest request) {
         return request.getRequestURI().contains("/token/refresh");
     }
 }

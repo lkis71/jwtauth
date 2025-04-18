@@ -41,8 +41,8 @@ class JwtTokenProviderTest {
                 .role(Role.ADMIN.getValue())
                 .build();
 
-        memberLoginRequest.setId("kslee");
-        memberLoginRequest.setPassword("9156");
+//        memberLoginRequest.setId("kslee");
+//        memberLoginRequest.setPassword("9156");
     }
 
     @Test

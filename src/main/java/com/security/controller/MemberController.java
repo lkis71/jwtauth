@@ -8,6 +8,8 @@ import com.security.service.MemberService;
 import com.security.util.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -34,11 +36,23 @@ public class MemberController {
         return ResponseEntity.ok().body(tokenResponse);
     }
 
+    @PostMapping("/logout")
+    public ResponseEntity<TokenResponse> logout(@AuthenticationPrincipal User user) {
+
+        TokenResponse tokenResponse = memberService.logout(user);
+        return ResponseEntity.ok().body(tokenResponse);
+    }
+
     @GetMapping("/token/refresh")
     public ResponseEntity<TokenResponse> refreshToken(HttpServletRequest request) {
 
         String token = jwtTokenProvider.getToken(request);
         TokenResponse tokenResponse = memberService.refreshToken(token);
         return ResponseEntity.ok().body(tokenResponse);
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<String> test() {
+        return ResponseEntity.ok().body("success");
     }
 }
