@@ -37,17 +37,18 @@ public class MemberController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<TokenResponse> logout(@AuthenticationPrincipal User user) {
+    public ResponseEntity<String> logout(HttpServletRequest request, @AuthenticationPrincipal User user) {
 
-        TokenResponse tokenResponse = memberService.logout(user);
-        return ResponseEntity.ok().body(tokenResponse);
+        String token = jwtTokenProvider.getToken(request);
+        memberService.logout(user, token);
+        return ResponseEntity.ok().body("success");
     }
 
     @GetMapping("/token/refresh")
-    public ResponseEntity<TokenResponse> refreshToken(HttpServletRequest request) {
+    public ResponseEntity<TokenResponse> refreshToken(HttpServletRequest request, @RequestParam("memberId") String memberId) {
 
         String token = jwtTokenProvider.getToken(request);
-        TokenResponse tokenResponse = memberService.refreshToken(token);
+        TokenResponse tokenResponse = memberService.refreshToken(memberId, token);
         return ResponseEntity.ok().body(tokenResponse);
     }
 

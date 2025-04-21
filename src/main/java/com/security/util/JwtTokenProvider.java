@@ -19,6 +19,8 @@ import org.springframework.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Key;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -126,17 +128,17 @@ public class JwtTokenProvider {
     }
 
     /**
-     * 토큰 만료일자 체크
+     * 토큰 만료일자
      *
      * @param token
      * @return
      */
-    public boolean isExpired(String token) {
+    public long getExpirationMillis(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .build()
                 .parseClaimsJws(token)
-                .getBody().getExpiration().before(new Date());
+                .getBody().getExpiration().getTime();
     }
 
     /**

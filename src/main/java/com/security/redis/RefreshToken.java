@@ -1,9 +1,8 @@
-package com.security.entity;
+package com.security.redis;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.TimeToLive;
 import org.springframework.data.redis.core.index.Indexed;
 
 import javax.persistence.Id;
@@ -11,6 +10,8 @@ import javax.persistence.Id;
 @Getter
 @Builder
 @RedisHash("refreshToken")
+@NoArgsConstructor
+@AllArgsConstructor
 public class RefreshToken {
 
     @Id
@@ -19,4 +20,7 @@ public class RefreshToken {
     @Setter
     @Indexed
     private String refreshToken;
+
+    @TimeToLive
+    private Long expiration;
 }

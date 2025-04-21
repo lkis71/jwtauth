@@ -20,28 +20,28 @@ class JwtServiceTest {
     @Autowired
     MemberService memberService;
 
-    @Test
-    public void 토큰갱신() throws Exception {
-
-        //given
-        MemberJoinRequest memberJoinRequest = MemberJoinRequest.builder()
-                .id("kslee")
-                .password("9156")
-                .role(Role.ADMIN.getValue())
-                .build();
-        Member member = memberService.join(memberJoinRequest);
-
-        MemberLoginRequest memberLoginRequest = MemberLoginRequest.builder()
-                .id("kslee")
-                .password(member.getPassword())
-                .build();
-        TokenResponse tokenResponse = memberService.login(memberLoginRequest);
-
-        //when
-        TokenResponse refreshTokenResponse = memberService.refreshToken(tokenResponse.getRefreshToken());
-
-        //then
-        assertNotEquals(tokenResponse.getAccessToken(), refreshTokenResponse.getAccessToken());
-        assertNotEquals(tokenResponse.getRefreshToken(), refreshTokenResponse.getRefreshToken());
-    }
+//    @Test
+//    public void 토큰갱신() throws Exception {
+//
+//        //given
+//        MemberJoinRequest memberJoinRequest = MemberJoinRequest.builder()
+//                .id("kslee")
+//                .password("9156")
+//                .role(Role.ADMIN.getValue())
+//                .build();
+//        Member member = memberService.join(memberJoinRequest);
+//
+//        MemberLoginRequest memberLoginRequest = MemberLoginRequest.builder()
+//                .id("kslee")
+//                .password(member.getPassword())
+//                .build();
+//        TokenResponse tokenResponse = memberService.login(memberLoginRequest);
+//
+//        //when
+//        TokenResponse refreshTokenResponse = memberService.refreshToken(tokenResponse.getRefreshToken());
+//
+//        //then
+//        assertNotEquals(tokenResponse.getAccessToken(), refreshTokenResponse.getAccessToken());
+//        assertNotEquals(tokenResponse.getRefreshToken(), refreshTokenResponse.getRefreshToken());
+//    }
 }

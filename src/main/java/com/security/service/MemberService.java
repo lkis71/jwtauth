@@ -1,20 +1,16 @@
 package com.security.service;
 
-import antlr.Token;
 import com.security.dto.MemberJoinRequest;
 import com.security.dto.MemberLoginRequest;
 import com.security.dto.TokenResponse;
 import com.security.entity.Member;
-import com.security.entity.RefreshToken;
-import com.security.repository.JwtRepository;
+import com.security.redis.enums.RedisPrefix;
+import com.security.redis.RedisTemplateStore;
 import com.security.repository.MemberRepository;
-import com.security.repository.RefreshTokenRedisRepository;
 import com.security.util.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,12 +21,12 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberService {
 
     private final JwtService jwtService;
+
     private final MemberRepository memberRepository;
-    private final JwtRepository jwtRepository;
-    private final RefreshTokenRedisRepository refreshTokenRedisRepository;
 
     private final JwtTokenProvider jwtTokenProvider;
     private final PasswordEncoder passwordEncoder;
+    private final RedisTemplateStore redisStore;
 
     @Transactional
     public Member join(MemberJoinRequest memberJoinRequest) {
@@ -53,56 +49,47 @@ public class MemberService {
 
         Authentication authentication = jwtService.authentication(member.getId(), member.getPassword());
 
-        // jwt 토큰 생성
+        // 토큰 발급
         TokenResponse tokenResponse = jwtTokenProvider.createToken(authentication);
 
-        // refreshToken 저장
-        refreshTokenRedisRepository.save(RefreshToken.builder()
-                .id(memberLoginRequest.getId())
-                .refreshToken(tokenResponse.getRefreshToken())
-                .build());
+        String refreshToken = tokenResponse.getRefreshToken();
+        redisStore.set(RedisPrefix.REFRESH_TOKEN.getValue() + ":" + member.getId(),
+                refreshToken, jwtTokenProvider.getExpirationMillis(refreshToken));
 
         return tokenResponse;
     }
 
-    public TokenResponse logout(User user) {
+    public void logout(User user, String accessToken) {
 
-        return null;
+        redisStore.delete(RedisPrefix.REFRESH_TOKEN.getValue() + ":" + user.getUsername());
+
+//        redisStore.set(RedisPrefix.BLACKLIST.getValue() + ":" + user.getUsername(),
+//                accessToken, jwtTokenProvider.getExpirationMillis(accessToken));
     }
 
-    /**
-     * 토큰 갱신 절차
-     * 1. DB에 저장된 사용자의 토큰 정보 조회
-     * 2. DB에서 조회한 사용자의 토큰 정보와 갱신 요청한 사용자의 정보가 일치한지 검사
-     * 3. 토큰 재발급을 위한 사용자 정보 조회
-     * 4. 사용자 인증
-     * 5. 토큰 재발급
-     * @param token
-     * @return
-     */
     @Transactional
-    public TokenResponse refreshToken(String token) {
+    public TokenResponse refreshToken(String memberId, String token) {
 
-        RefreshToken refreshToken = refreshTokenRedisRepository.findByRefreshToken(token);
+        // 토큰 검증
+        String originToken = redisStore.get(RedisPrefix.REFRESH_TOKEN.getValue() + ":" + memberId);
+        if (!originToken.equals(token)) {
+            throw new IllegalArgumentException();
+        }
 
-        //TODO: 토큰 유효성 검증
+        redisStore.delete(RedisPrefix.REFRESH_TOKEN.getValue() + ":" + memberId);
 
-        // 사용자 정보 조회 및 인증
-        Member member = findMember(refreshToken.getId());
-        Authentication authentication = jwtService.authentication(refreshToken.getId(), member.getPassword());
+        // 사용자 인증
+        Member member = findMember(memberId);
+        Authentication authentication = jwtService.authentication(memberId, member.getPassword());
 
         // 토큰 재발급
         TokenResponse tokenResponse = jwtTokenProvider.createToken(authentication);
-        refreshToken.setRefreshToken(tokenResponse.getRefreshToken());
-        refreshTokenRedisRepository.save(refreshToken);
+        // 리프레시 토큰 저장
+        String refreshToken = tokenResponse.getRefreshToken();
+        redisStore.set(RedisPrefix.REFRESH_TOKEN.getValue() + ":" + member.getId(),
+                refreshToken, jwtTokenProvider.getExpirationMillis(refreshToken));
 
         return tokenResponse;
-    }
-
-    private RefreshToken findMemberToken(String refreshToken) {
-        RefreshToken tokenStorage = jwtRepository.findMemberToken(refreshToken)
-                .orElseThrow(() -> new IllegalArgumentException("토큰이 유효하지 않습니다."));
-        return tokenStorage;
     }
 
     private Member findMember(String memberId) {

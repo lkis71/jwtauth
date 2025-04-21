@@ -17,25 +17,35 @@ spring:
     activate:
       on-profile: dev
   datasource:
-    url: jdbc:h2:~/jwtauth
-    username: kslee
-    password: 9156
-    driver-class-name: org.h2.Driver
+    url: jdbc:postgresql://localhost:5432/jwt
+    username: postgres
+    password: wlfkswlry
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      data-source-properties:
+        cachePrepStmts: true
+        prepStmtCacheSize: 250
+        prepStmtCacheSqlLimit: 2048
+        useServerPrepStmts: true
 
-  # h2 database web으로 확인
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
-      settings:
-        web-allow-others: true
+# h2 database web으로 확인
+#  h2:
+#    console:
+#      enabled: true
+#      path: /h2-console
+#      settings:
+#        web-allow-others: true
 
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
     properties:
       hibernate:
         format_sql: true
+
+mybatis:
+  mapper-locations: classpath:mybatis/mapper/*.xml
+  type-aliases-package: com.security.entity
 
 server:
   port: 8080
@@ -57,7 +67,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: create
+      ddl-auto: none # 절대 변경 x
     properties:
       hibernate:
         format_sql: true
