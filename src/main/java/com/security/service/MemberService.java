@@ -63,7 +63,7 @@ public class MemberService {
         redisStore.delete(RedisPrefix.REFRESH_TOKEN.getValue() + ":" + memberId);
 
         // accessToken 블랙리스트 등록
-        redisStore.set(RedisPrefix.BLACKLIST.getValue() + ":accessToken",
+        redisStore.set(RedisPrefix.BLACKLIST.getValue() + ":" + memberId,
                 accessToken, jwtTokenProvider.getExpirationMillis(accessToken));
     }
 

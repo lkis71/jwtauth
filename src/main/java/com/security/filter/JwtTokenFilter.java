@@ -25,6 +25,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         String token = request.getHeader("X-User-Token");
 
         if (token != null) {
+            // JWT 토큰을 검증하고 토큰에 저장된 정보를 UsernamePasswordAuthenticationToken에 담아 SecurityContextHolder에 저장한다.
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
