@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.servlet.FilterChain;
@@ -23,23 +22,9 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String token = jwtTokenProvider.getToken(request);
+        String token = request.getHeader("X-User-Token");
 
-        // Refresh Token 의 경우 토큰 검증을 하지 않음
-        if (isRequestRefreshToken(request)) {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
-        if (StringUtils.hasText(token)) {
-            // 토큰 유효성 검사
-            if (!jwtTokenProvider.validateToken(token)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("Invalid JWT Token");
-                return;
-            }
-
-            // JWT 토큰을 검증하고 토큰에 저장된 정보를 UsernamePasswordAuthenticationToken에 담아 SecurityContextHolder에 저장한다.
+        if (token != null) {
             Authentication authentication = jwtTokenProvider.getAuthentication(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
@@ -47,7 +32,34 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    private boolean isRequestRefreshToken(HttpServletRequest request) {
-        return request.getRequestURI().contains("/token/refresh");
-    }
+//    @Override
+//    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+//
+//        String token = jwtTokenProvider.extractToken(request);
+//
+//        // Refresh Token 의 경우 토큰 검증을 하지 않음
+//        if (isRequestRefreshToken(request)) {
+//            filterChain.doFilter(request, response);
+//            return;
+//        }
+//
+//        if (StringUtils.hasText(token)) {
+//            // 토큰 유효성 검사
+//            if (!jwtTokenProvider.validateToken(token)) {
+//                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//                response.getWriter().write("Invalid JWT Token");
+//                return;
+//            }
+//
+//            // JWT 토큰을 검증하고 토큰에 저장된 정보를 UsernamePasswordAuthenticationToken에 담아 SecurityContextHolder에 저장한다.
+//            Authentication authentication = jwtTokenProvider.getAuthentication(token);
+//            SecurityContextHolder.getContext().setAuthentication(authentication);
+//        }
+//
+//        filterChain.doFilter(request, response);
+//    }
+//
+//    private boolean isRequestRefreshToken(HttpServletRequest request) {
+//        return request.getRequestURI().contains("/token/refresh");
+//    }
 }

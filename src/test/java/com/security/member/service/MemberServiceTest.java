@@ -1,74 +1,150 @@
 package com.security.member.service;
 
+import com.security.dto.loginRequest;
 import com.security.dto.TokenResponse;
-import com.security.service.CustomUserDetailsService;
-import com.security.dto.MemberJoinRequest;
-import com.security.dto.MemberLoginRequest;
 import com.security.entity.Member;
-import com.security.enums.Role;
+import com.security.redis.RedisTemplateStore;
+import com.security.repository.MemberRepository;
+import com.security.service.JwtService;
 import com.security.service.MemberService;
-import org.junit.jupiter.api.DisplayName;
+import com.security.util.JwtTokenProvider;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @Transactional
 public class MemberServiceTest {
 
-    @Autowired
-    MemberService memberService;
+    @InjectMocks
+    private MemberService memberService;
 
-    @Autowired
-    CustomUserDetailsService customUserDetailsService;
+    @Mock
+    private MemberRepository memberRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private JwtService jwtService;
+
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Mock
+    private RedisTemplateStore redisStore;
 
     @Test
-    @DisplayName("회원가입")
-    public void join() {
+    void 로그인_성공() {
+        // given
+        String id = "test";
+        String password = "1234";
+        String encodedPassword = passwordEncoder.encode(password);
 
-        //given
-        MemberJoinRequest memberJoinRequest = MemberJoinRequest.builder()
-                        .id("kslee")
-                        .password("9156")
-                        .role(Role.ADMIN.getValue())
-                        .build();
+        loginRequest loginRequest = new loginRequest(id, password);
+        Member mockMember = Member.builder()
+                .id(id)
+                .password(encodedPassword).build();
 
-        //when
-        Member member = memberService.join(memberJoinRequest);
+        Authentication mockAuthentication = mock(Authentication.class);
+        TokenResponse mockTokenResponse = TokenResponse.builder()
+                .tokenType("refreshToken")
+                .accessToken("accessToken")
+                .refreshToken("refreshToken").build();
 
-        //then
-        assertEquals(memberJoinRequest.getId(), member.getId());
-        assertEquals(memberJoinRequest.getPassword(), member.getPassword());
-        assertEquals(memberJoinRequest.getRole(), member.getRole());
+        // mocking
+        when(memberRepository.findById(id)).thenReturn(Optional.of(mockMember));
+        when(passwordEncoder.matches(password, encodedPassword)).thenReturn(true);
+        when(jwtService.authentication(id, encodedPassword)).thenReturn(mockAuthentication);
+        when(jwtTokenProvider.createToken(mockAuthentication)).thenReturn(mockTokenResponse);
+
+        // when
+        TokenResponse result = memberService.login(loginRequest);
+
+        // then
+        assertEquals("accessToken", result.getAccessToken());
+        assertEquals("refreshToken", result.getRefreshToken());
     }
 
     @Test
-    @DisplayName("로그인")
-    public void login() throws Exception {
+    void 로그인_성공_리프레시토큰_레디스저장_검증() {
+        // given
+        String id = "test";
+        String password = "1234";
+        String encodedPassword = passwordEncoder.encode(password);
 
-        //given
-        MemberJoinRequest memberJoinRequest = MemberJoinRequest.builder()
-                .id("kslee")
-                .password("9156")
-                .role(Role.ADMIN.getValue())
-                .build();
-        Member member = memberService.join(memberJoinRequest);
+        loginRequest loginRequest = new loginRequest(id, password);
+        Member mockMember = Member.builder()
+                .id(id)
+                .password(encodedPassword).build();
 
-        //when
-        MemberLoginRequest memberLoginRequest = MemberLoginRequest.builder()
-                .id("kslee")
-                .password("9156")
-                .build();
-        TokenResponse tokenResponse = memberService.login(memberLoginRequest);
+        Authentication mockAuthentication = mock(Authentication.class);
+        TokenResponse mockTokenResponse = TokenResponse.builder()
+                .tokenType("refreshToken")
+                .accessToken("accessToken")
+                .refreshToken("refreshToken").build();
 
-        System.out.println(tokenResponse.getRefreshToken());
+        // mocking
+        when(memberRepository.findById(id)).thenReturn(Optional.of(mockMember));
+        when(passwordEncoder.matches(password, encodedPassword)).thenReturn(true);
+        when(jwtService.authentication(id, encodedPassword)).thenReturn(mockAuthentication);
+        when(jwtTokenProvider.createToken(mockAuthentication)).thenReturn(mockTokenResponse);
+        when(jwtTokenProvider.getExpirationMillis("refreshToken")).thenReturn(3600000L);
 
-        //then
-        assertNotNull(tokenResponse.getAccessToken());
-        assertNotNull(tokenResponse.getRefreshToken());
+        // when
+        memberService.login(loginRequest);
+
+        // then
+        verify(redisStore).set(
+            eq("refreshToken:" + id),
+            eq("refreshToken"),
+            eq(3600000L)
+        );
+    }
+
+    @Test
+    void 로그인_사용자가_존재하지_않을_경우_예외() {
+        // given
+        String id = "test";
+        String password = "1234";
+        String encodedPassword = passwordEncoder.encode(password);
+
+        loginRequest loginRequest = new loginRequest(id, password);
+
+        // mocking
+        when(passwordEncoder.matches(password, encodedPassword)).thenReturn(false);
+
+        // when then
+        assertThrows(IllegalArgumentException.class, () -> memberService.login(loginRequest));
+    }
+
+    @Test
+    void 로그인_비밀번호_불일치_예외() {
+        // given
+        String id = "test";
+        String password = "1234";
+        String encodedPassword = passwordEncoder.encode(password);
+
+        loginRequest loginRequest = new loginRequest(id, password);
+        Member mockMember = Member.builder()
+                .id(id)
+                .password(encodedPassword).build();
+
+        // mocking
+        when(memberRepository.findById(id)).thenReturn(Optional.of(mockMember));
+        when(passwordEncoder.matches(password, encodedPassword)).thenReturn(false);
+
+        // when then
+        assertThrows(IllegalArgumentException.class, () -> memberService.login(loginRequest));
     }
 }

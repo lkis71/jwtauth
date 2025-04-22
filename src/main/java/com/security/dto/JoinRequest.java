@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class MemberJoinRequest {
+public class JoinRequest {
 
     private String id;
     private String password;
@@ -22,7 +22,7 @@ public class MemberJoinRequest {
     }
 
     @Builder
-    public MemberJoinRequest(String id, String password, String role) {
+    public JoinRequest(String id, String password, String role) {
         this.id = id;
         this.password = password;
         this.role = role;

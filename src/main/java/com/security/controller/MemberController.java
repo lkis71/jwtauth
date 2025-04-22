@@ -1,8 +1,9 @@
 package com.security.controller;
 
-import com.security.dto.MemberJoinRequest;
-import com.security.dto.MemberLoginRequest;
+import com.security.dto.JoinRequest;
+import com.security.dto.TokenRefreshRequest;
 import com.security.dto.TokenResponse;
+import com.security.dto.loginRequest;
 import com.security.entity.Member;
 import com.security.service.MemberService;
 import com.security.util.JwtTokenProvider;
@@ -23,37 +24,37 @@ public class MemberController {
     private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/join")
-    public ResponseEntity<Member> join(@RequestBody MemberJoinRequest memberJoinRequest) {
+    public ResponseEntity<Member> join(@RequestBody JoinRequest joinRequest) {
 
-        Member member = memberService.join(memberJoinRequest);
+        Member member = memberService.join(joinRequest);
         return ResponseEntity.ok().body(member);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponse> login(@RequestBody MemberLoginRequest memberLoginRequest) {
+    public ResponseEntity<TokenResponse> login(@RequestBody loginRequest loginRequest) {
 
-        TokenResponse tokenResponse = memberService.login(memberLoginRequest);
+        TokenResponse tokenResponse = memberService.login(loginRequest);
         return ResponseEntity.ok().body(tokenResponse);
     }
 
     @PostMapping("/logout")
     public ResponseEntity<String> logout(HttpServletRequest request, @AuthenticationPrincipal User user) {
 
-        String token = jwtTokenProvider.getToken(request);
-        memberService.logout(user, token);
+        String token = request.getHeader("X-User-Token");
+//        String token = jwtTokenProvider.extractToken(request);
+        memberService.logout(user.getUsername(), token);
         return ResponseEntity.ok().body("success");
     }
 
-    @GetMapping("/token/refresh")
-    public ResponseEntity<TokenResponse> refreshToken(HttpServletRequest request, @RequestParam("memberId") String memberId) {
+    @PostMapping("/token/refresh")
+    public ResponseEntity<TokenResponse> refreshToken(@RequestBody TokenRefreshRequest tokenRefreshRequest) {
 
-        String token = jwtTokenProvider.getToken(request);
-        TokenResponse tokenResponse = memberService.refreshToken(memberId, token);
+        TokenResponse tokenResponse = memberService.refreshToken(tokenRefreshRequest);
         return ResponseEntity.ok().body(tokenResponse);
     }
 
     @GetMapping("/test")
-    public ResponseEntity<String> test() {
-        return ResponseEntity.ok().body("success");
+    public ResponseEntity<String> test(HttpServletRequest request) {
+        return ResponseEntity.ok().body(request.getHeader("X-User-Token"));
     }
 }

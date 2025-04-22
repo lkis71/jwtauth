@@ -11,21 +11,21 @@ public class RefreshTokenStore implements RedisStore {
     private final RefreshTokenRedisRepository refreshTokenRedisRepository;
 
     @Override
-    public void set(String memberId, String refreshToken, Long expiredTime) {
+    public void set(String key, String value, Long expiredTime) {
         refreshTokenRedisRepository.save(RefreshToken.builder()
-                .id(memberId)
-                .refreshToken(refreshToken)
+                .id(key)
+                .refreshToken(value)
                 .expiration(expiredTime)
                 .build());
     }
 
     @Override
-    public String get(String memberId) {
-        return refreshTokenRedisRepository.findById(memberId).orElse(new RefreshToken()).getId();
+    public String get(String key) {
+        return refreshTokenRedisRepository.findById(key).orElse(new RefreshToken()).getId();
     }
 
     @Override
-    public void delete(String memberId) {
-        refreshTokenRedisRepository.deleteById(memberId);
+    public void delete(String key) {
+        refreshTokenRedisRepository.deleteById(key);
     }
 }

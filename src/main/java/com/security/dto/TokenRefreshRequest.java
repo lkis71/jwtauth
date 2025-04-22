@@ -6,8 +6,8 @@ import lombok.*;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MemberLoginRequest {
+public class TokenRefreshRequest {
 
-    private String id;
-    private String password;
+    private String memberId;
+    private String refreshToken;
 }

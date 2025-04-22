@@ -1,16 +1,16 @@
 package com.security.service;
 
-import com.security.dto.MemberJoinRequest;
-import com.security.dto.MemberLoginRequest;
+import com.security.dto.JoinRequest;
+import com.security.dto.loginRequest;
+import com.security.dto.TokenRefreshRequest;
 import com.security.dto.TokenResponse;
 import com.security.entity.Member;
-import com.security.redis.enums.RedisPrefix;
 import com.security.redis.RedisTemplateStore;
+import com.security.redis.enums.RedisPrefix;
 import com.security.repository.MemberRepository;
 import com.security.util.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,50 +29,52 @@ public class MemberService {
     private final RedisTemplateStore redisStore;
 
     @Transactional
-    public Member join(MemberJoinRequest memberJoinRequest) {
+    public Member join(JoinRequest joinRequest) {
 
-        Member member = memberJoinRequest.toEntity();
-        member.setPassword(passwordEncoder.encode(memberJoinRequest.getPassword()));
+        Member member = joinRequest.toEntity();
+        member.setPassword(passwordEncoder.encode(joinRequest.getPassword()));
         memberRepository.save(member);
 
         return member;
     }
 
     @Transactional
-    public TokenResponse login(MemberLoginRequest memberLoginRequest) {
+    public TokenResponse login(loginRequest loginRequest) {
 
-        Member member = findMember(memberLoginRequest.getId());
+        Member member = findMember(loginRequest.getId());
         // 평문 비밀번호와 암호화된 비밀번호 일치성 검사
-        if (!passwordEncoder.matches(memberLoginRequest.getPassword(), member.getPassword())) {
+        if (!passwordEncoder.matches(loginRequest.getPassword(), member.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
+        // 사용자 인증
         Authentication authentication = jwtService.authentication(member.getId(), member.getPassword());
 
-        // 토큰 발급
+        // 토큰 발급 및 리프레시 토큰 저장
         TokenResponse tokenResponse = jwtTokenProvider.createToken(authentication);
-
-        String refreshToken = tokenResponse.getRefreshToken();
-        redisStore.set(RedisPrefix.REFRESH_TOKEN.getValue() + ":" + member.getId(),
-                refreshToken, jwtTokenProvider.getExpirationMillis(refreshToken));
+        saveRefreshTokenInRedis(tokenResponse, member);
 
         return tokenResponse;
     }
 
-    public void logout(User user, String accessToken) {
+    @Transactional
+    public void logout(String memberId, String accessToken) {
 
-        redisStore.delete(RedisPrefix.REFRESH_TOKEN.getValue() + ":" + user.getUsername());
+        redisStore.delete(RedisPrefix.REFRESH_TOKEN.getValue() + ":" + memberId);
 
-//        redisStore.set(RedisPrefix.BLACKLIST.getValue() + ":" + user.getUsername(),
-//                accessToken, jwtTokenProvider.getExpirationMillis(accessToken));
+        // accessToken 블랙리스트 등록
+        redisStore.set(RedisPrefix.BLACKLIST.getValue() + ":accessToken",
+                accessToken, jwtTokenProvider.getExpirationMillis(accessToken));
     }
 
     @Transactional
-    public TokenResponse refreshToken(String memberId, String token) {
+    public TokenResponse refreshToken(TokenRefreshRequest tokenRefreshRequest) {
+
+        String memberId = tokenRefreshRequest.getMemberId();
 
         // 토큰 검증
         String originToken = redisStore.get(RedisPrefix.REFRESH_TOKEN.getValue() + ":" + memberId);
-        if (!originToken.equals(token)) {
+        if (!originToken.equals(tokenRefreshRequest.getRefreshToken())) {
             throw new IllegalArgumentException();
         }
 
@@ -82,14 +84,17 @@ public class MemberService {
         Member member = findMember(memberId);
         Authentication authentication = jwtService.authentication(memberId, member.getPassword());
 
-        // 토큰 재발급
+        // 토큰 재발급 및 리프레시 토큰 저장
         TokenResponse tokenResponse = jwtTokenProvider.createToken(authentication);
-        // 리프레시 토큰 저장
+        saveRefreshTokenInRedis(tokenResponse, member);
+
+        return tokenResponse;
+    }
+
+    private void saveRefreshTokenInRedis(TokenResponse tokenResponse, Member member) {
         String refreshToken = tokenResponse.getRefreshToken();
         redisStore.set(RedisPrefix.REFRESH_TOKEN.getValue() + ":" + member.getId(),
                 refreshToken, jwtTokenProvider.getExpirationMillis(refreshToken));
-
-        return tokenResponse;
     }
 
     private Member findMember(String memberId) {

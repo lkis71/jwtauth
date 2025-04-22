@@ -146,15 +146,15 @@ public class JwtTokenProvider {
      * @param request
      * @return
      */
-    public String getToken(HttpServletRequest request) {
-        final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
-
-        if (!StringUtils.hasText(authorization) || !authorization.startsWith("Bearer")) {
-            return null;
-        }
-
-        return authorization.substring(7);
-    }
+//    public String extractToken(HttpServletRequest request) {
+//        final String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
+//
+//        if (!StringUtils.hasText(authorization) || !authorization.startsWith("Bearer")) {
+//            return null;
+//        }
+//
+//        return authorization.substring(7);
+//    }
 
     private Claims parseClaims(String accessToken) {
         try {
